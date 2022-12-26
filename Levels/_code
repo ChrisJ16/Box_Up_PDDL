@@ -1,0 +1,8 @@
+
+def init_grid():
+    f = open("Levels/level1", "r")
+    aux = f.readline()
+    (rows, collumns) = (int(aux[0]), int(aux[2]))
+    items = re.split("\s", f.read())
+    items.pop()
+    return rows, collumns, items

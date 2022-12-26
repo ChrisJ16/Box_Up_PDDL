@@ -1,0 +1,19 @@
+e - empty block
+f - full block
+p - player
+Pentru cele 4 tipuri de cutii:
+
+Cutia Rosie(red):
+    r1 - deshidere nord
+    r2 - deschidere vest
+    r3 - deschidere sud
+    r4 - deschidere est
+Cutia albastra(a):
+    a1 - nord
+    a2 - vest
+    a3 - sud
+    a4 - est
+Cutia neagra mare(Big black box):
+    B1, B2, B3, B4
+Cutia neagra mica(Small black box):
+    b1, b2, b3, b4
