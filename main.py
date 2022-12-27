@@ -157,7 +157,6 @@ def main():
     game = Game
     game.init_game(game, "level1")
 
-
     while True:
         clock.tick(FPS)
         # checking for events
@@ -168,19 +167,22 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     print("Up")
+                    game.move_player(game, "UP", game.get_player_pos(game))
                 elif event.key == pygame.K_DOWN:
                     print("Down")
+                    game.move_player(game, "DOWN", game.get_player_pos(game))
                 elif event.key == pygame.K_LEFT:
                     print("Left")
+                    game.move_player(game, "LEFT", game.get_player_pos(game))
                 elif event.key == pygame.K_RIGHT:
                     print("Right")
-
+                    game.move_player(game, "RIGHT", game.get_player_pos(game))
+                print(game.grid)
         # processing objects
         for object in objects:
             object.process()
         # redraw window
         draw_playArea(game.rows, game.columns, game.grid)
-
         draw_window()
 
 # ne asiguram ca doar fisierul main
