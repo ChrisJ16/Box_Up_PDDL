@@ -24,7 +24,6 @@ class Game:
             if j == c:
                 i += 1
                 j =0
-
         self.grid = auxItems
 
     def get_player_pos(self):
@@ -34,108 +33,119 @@ class Game:
             for ax in aux:
                 if ax == 'p':
                     return obj
+        return None
+
+    def get_pos_info(self, row, col):
+        for obj in self.grid:
+            (objects, pos) = obj
+            if pos == (row, col):
+                return objects
+        return None
 
     def move_player(self, move, player):
-        (pl, pos) = player
-        (pos1, pos2) = pos
-        oldPos = pos
-        outDir = -1
-        inDir = -1
-        if move == "UP":
-            newPos = (pos1-1, pos2)
-            outDir = 1
-            inDir = 3
-        elif move == "DOWN":
-            newPos = (pos1+1, pos2)
-            outDir = 3
-            inDir = 1
-        elif move == "LEFT":
-            newPos = (pos1, pos2-1)
-            outDir = 2
-            inDir = 4
-        elif move == "RIGHT":
-            newPos = (pos1, pos2+1)
-            outDir = 4
-            inDir = 2
-
-        k = 0
-        nextObj = ""
-        oldObj = ""
-        #luam obiectele de pe vechea pozitie
-        for obj in self.grid:
-            (objects, position) = obj
-            if oldPos == position:
-                oldObj = objects
-        # luam obiectele de pe noua pozitie
-        for obj in self.grid:
-            (objects, position) = obj
-            if newPos == position:
-                nextObj = objects
-
-       # verificam cine iese: doar jucatorul sau si alte cutii
-        aux = re.split("-", oldObj)
-        newItem = ""
-        leftItem = ""
-        if aux[0] == 'p':
-            finalOldObj = 'p'
-        else:
-            for item in aux:
-                if item[0]!='e':
-                    if item[0] != 'p':
-                        if int(item[1]) != outDir:
-                            newItem += item + "-"
-                        else:
-                            leftItem += item + "-"
-            newItem += "p"
-            if leftItem == "":
-                leftItem = 'e'
-            else:
-                leftItem = leftItem[:-1]
-            finalOldObj = newItem
-
-        # verificam daca sse poate intra pe noua pozitie
-        aux = re.split("-", nextObj)
-        if aux[0] == 'e':
-            finalNewObj = finalOldObj
-        elif aux[0] != 'f' and not aux:
-            auxP = re.split("-", finalOldObj)
-            # verificam orientarea cutiei unde vor intra celelalte
-            print(aux)
-            if inDir == int(aux[0][1]):
-                # verificam daca cutiile sunt compatibile
-                # print(aux[0][0], auxP[0][0])
-                if aux[0][0] == 'B' and (auxP[0][0] == 'B' or auxP[0][0] == 'a'):
-                    print("impossible")
-                    return
-                elif aux[0][0] == 'a' and (auxP[0][0] == 'B' or auxP[0][0] == 'a'):
-                    print("impossible")
-                    return
-                elif aux[0][0] == 'r' and (auxP[0][0] == 'b'):
-                    print("impossible")
-                    return
-                elif aux[0][0] == 'b' and (auxP[0][0] == 'b'):
-                    print("impossible")
-                    return
-                else:
-                    print("du-te pornit")
-                    finalNewObj = nextObj + "-" + finalOldObj
 
         grid = self.grid
-        #acutalizam noua pozitie cu obiectele aferente
-        for item in grid:
-            (objects, position) = item
-            if newPos == position:
-                grid[k] = (finalNewObj, newPos)
-            k += 1
-        #acutalizam vechea pozitie cu obiectele aferente
-        k=0
-        for item in grid:
-            (objects, position) = item
-            if oldPos == position:
-                grid[k] = (leftItem, newPos)
-            k += 1
+        (p, pos) = player
+        (oldRow, oldCol) = pos
+        (row, col) = (oldRow, oldCol)
 
+        openings = ["UP", "LEFT", "DOWN", "RIGHT"]
+        if move == "UP":
+            row -= 1
+        elif move == "DOWN":
+            row += 1
+        elif move == "LEFT":
+            col -= 1
+        elif move == "RIGHT":
+            col += 1
+        else:
+            row = -1
+            col = -1
+
+        if row < 0 or row >= self.rows or col < 0 or col >= self.columns:
+            return self.grid
+        else:
+            # in primul si primul rand verificam daca putem face o miscare valida
+            auxObj1 = re.split("-", self.get_pos_info(self, oldRow, oldCol)).pop() # poz veche
+            auxObj2 = re.split("-", self.get_pos_info(self, row, col)).pop() # poz noua
+
+            if auxObj1[0] == auxObj2[0]:
+                print("problem")
+            elif auxObj1[0] == 'B' and auxObj2[0] != 'e':
+                print("problem")
+            elif auxObj1[0] == 'a' and auxObj2 != 'e':
+                print("problem")
+            elif auxObj1[0] == 'b' and auxObj2 == 'r':
+                print("problem")
+            elif auxObj1[0] == 'r' and auxObj2 == 'b':
+                print("problem")
+            elif auxObj2 == 'f':
+                print("problem")
+            else:
+                # luam itemele de pe vechea pozitie
+                for ax in grid:
+                    (auxItem, pos) = ax
+                    if pos == (oldRow, oldCol):
+                        item = auxItem
+                # verificam ce iteme raman si care pleaca:
+                oldItems = re.split("-", item)
+                newItem = []
+                leftItem = []
+                while oldItems:
+                    popped = oldItems.pop()
+                    if popped == 'p':
+                        newItem += [popped]
+                    else:
+                        if openings[int(popped[1])-1] != move:
+                            newItem += [popped]
+                        elif openings[int(popped[1])-1] == move and len(newItem) != 0:
+                            newItem += [popped]
+                        else:
+                            leftItem += [popped]
+                newItem.reverse()
+                # verificam ce iteme pot intra pe noua pozitie, care nu
+                # sunt trimise inapoi pe vechea pozitie, adica vor fi adaugate la oldItems
+                itemsInNewPos = []
+                for ax in grid:
+                    (auxItem, pos) = ax
+                    if pos == (row, col):
+                        item = auxItem
+                if item == 'e':
+                    itemsInNewPos  = newItem
+                else:
+                    itemsInNewPos = re.split("-", item)
+                    while newItem:
+                        popped = newItem.pop()
+                        if popped == 'p':
+                            itemsInNewPos.insert(0, 'p')
+                        else:
+                            itemsInNewPos.insert(0, popped)
+                # acum facem actualizarile in grid pe pozitia noua
+                newItemString = ""
+                while itemsInNewPos:
+                    newItemString += itemsInNewPos.pop(0) + "-"
+                newItemString = newItemString[:-1]
+
+                oldItemString = ""
+                if leftItem:
+                    while leftItem:
+                        oldItemString += leftItem.pop() + "-"
+                    oldItemString = oldItemString[:-1]
+                else:
+                    oldItemString = 'e'
+                #print("Itemele lasate pe vechea pozitie:", oldItemString)
+                #print("Itemele de pe noua pozitie:", newItemString)
+
+                k=0
+                for ax in grid:
+                    (auxItem, pos) = ax
+                    if pos == (row, col):
+                        grid[k] = (newItemString, (row, col))
+                    elif pos == (oldRow, oldCol):
+                        grid[k] = (oldItemString, (oldRow, oldCol))
+                    k += 1
         self.grid = grid
+
     def is_goal_state(self):
         (trueBlue, trueRed) = (False, False)
         for obj in self.grid:
