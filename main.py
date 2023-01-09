@@ -1,7 +1,7 @@
 import re
-
 import pygame
 import sys
+import os
 
 from Game import Game
 
@@ -177,21 +177,30 @@ def ResetLevel():
     f.write("1")
     print("Level Reset")
 
+def StartLevel():
+    reset = True
+    f = open("Levels/start", "w")
+    f.write("1")
+    print("Level Start")
 def ResetFiles():
     f1 = open("Levels/chg", "w")
     f2 = open("Levels/rst", "w")
+    f3 = open("Levels/start", "w")
     f1.write("0")
     f2.write("0")
+    f3.write("0")
 
 customButton1 = Button(500, 400, 200, 50, 'Change Level', ChangeLevel)
 customButton2 = Button(750, 400, 200, 50, 'Reset Level', ResetLevel)
-
+customButton3 = Button(700, 200, 250, 50, 'Start auto solve', StartLevel)
 
 def main():
     clock = pygame.time.Clock()
 
+    queuedMoves = []
     moves = 0
     isEnd = False
+    isAuto = False
     level = 1
 
     game = Game
@@ -223,20 +232,56 @@ def main():
         for object in objects:
             object.process()
         # redraw window
+
         f1 = open("Levels/chg", "r")
         change = int(f1.read())
         f2 = open("Levels/rst", "r")
         reset = int(f2.read())
+        f3 = open("Levels/start", "r")
+        start = int(f3.read())
 
         if change == 1:
             level += 1
             if level == 6:
                 level = 1
             game.init_game(game, f"level{level}")
+            isEnd = False
+            moves = 0
             ResetFiles()
         if reset == 1:
             game.init_game(game, f"level{level}")
             moves = 0
+            isEnd = False
+            ResetFiles()
+        if start == 1:
+            # trebuie schimbat in fucntie de unde are fiecare path-ul lui catre pddl si fiserele respective
+            cmd = f'/home/chrij16/Desktop/AI/Plannig/DIRNAME/fast-downward.py /home/chrij16/Desktop/AI/Plannig/BoxupPuzzle/constraints.pddl ' \
+                  f'/home/chrij16/Desktop/AI/Plannig/BoxupPuzzle/lvl{level}.pddl --heuristic "h=ff()" --search "astar(h)"'
+            os.system(cmd)
+
+            f = open(r"sas_plan", "r")
+            txt = f.readlines()
+            for line in txt:
+                aux = re.split(" ", line)
+                if 'up' in aux[0]:
+                    game.move_player(game, "UP", game.get_player_pos(game))
+                    #queuedMoves.append("UP")
+                elif 'down' in aux[0]:
+                    game.move_player(game, "DOWN", game.get_player_pos(game))
+                    #queuedMoves.append("DOWN")
+                elif 'left' in aux[0]:
+                    game.move_player(game, "LEFT", game.get_player_pos(game))
+                    #queuedMoves.append("LEFT")
+                elif 'right' in aux[0]:
+                    game.move_player(game, "RIGHT", game.get_player_pos(game))
+                    #queuedMoves.append("RIGHT")
+                moves += 1
+
+                pygame.time.delay(90) #de aici se schimba viteza jocului
+
+                draw_playArea(game.rows, game.columns, game.grid)
+                draw_window()
+            start = 0
             ResetFiles()
 
         display_any_text(f"Miscari: {moves}", 600, 100)
@@ -248,7 +293,6 @@ def main():
             isEnd = True
             ResetFiles()
             display_any_text("Ati castigat!", 600, 200)
-
 
 # ne asiguram ca doar fisierul main
 if __name__ == "__main__":
